@@ -13,3 +13,14 @@ venv/
 # Fichiers système
 .DS_Store
 Thumbs.db
+
+# Modèles lourds (optionnel : retire ces lignes si tu veux pousser les .pkl)
+# models/*.pkl
+
+# Logs et fichiers temporaires
+*.log
+*.tmp
+.env
+
+# Optuna (base de données de recherche d'hyperparamètres)
+*.db
