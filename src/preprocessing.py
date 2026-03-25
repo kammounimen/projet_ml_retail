@@ -121,7 +121,8 @@ def supprimer_colonnes_inutiles(df):
     df = df.drop(columns=colonnes_presentes)
 
     print(f"✅ Colonnes supprimées : {colonnes_presentes}")
-    print(f"   Colonnes restantes  : {df.shape[1]}")
+    print(f"🔎 Nombre supprimé     : {len(colonnes_presentes)}")
+    print(f"🔎 Colonnes restantes  : {df.shape[1]}")
     return df
 
 
@@ -262,14 +263,9 @@ def encoder_colonnes(df):
     # ── TARGET ENCODING pour Country ──────────────────────────
     # 37+ pays → 1 seule colonne numérique (taux churn moyen)
 
-    if 'Country' in df.columns and 'Churn' in df.columns:
-        taux_churn_par_pays = df.groupby('Country')['Churn'].mean()
-        df['Country_encoded'] = df['Country'].map(taux_churn_par_pays)
+    if 'Country' in df.columns:
         df = df.drop(columns=['Country'])
-        print("✅ Country             → Target Encoding (taux churn moyen par pays)")
-    elif 'Country' in df.columns:
-        df = df.drop(columns=['Country'])
-        print("⚠️  Country supprimée")
+        print("✅ Country supprimée (Target Encoding fait dans train_model.py)")
 
     # ── ONE-HOT ENCODING ──────────────────────────────────────
     # dtype=int → 0 et 1 au lieu de True/False
@@ -330,43 +326,66 @@ def pipeline_preprocessing(
         chemin_output='../data/processed/data_clean.csv'):
 
     print("\n" + "=" * 55)
-    print("🚀  DÉMARRAGE DU PREPROCESSING")
+    print("DÉMARRAGE DU PREPROCESSING")
     print("=" * 55 + "\n")
 
-    # 1. Charger
     df = charger_donnees(chemin_input)
-
-    # 1b. Parser les dates et IP EN PREMIER (avant suppression !)
+    # DEBUG colonnes
+    nb_initial = df.shape[1]
+    print(f"🔎 Colonnes initiales : {nb_initial}")
     print("\n--- Étape 1b : Parsing RegistrationDate + LastLoginIP ---")
     df = parser_dates(df)
-
-    # 2. Supprimer les colonnes inutiles + ChurnRiskCategory
+    print(f"🔎 Colonnes après parsing (feature engineering initial) : {df.shape[1]}")
     print("\n--- Étape 2 : Suppression des colonnes inutiles ---")
     df = supprimer_colonnes_inutiles(df)
 
-    # 3. Corriger les valeurs aberrantes
     print("\n--- Étape 3 : Correction des valeurs aberrantes ---")
     df = corriger_valeurs_aberrantes(df)
 
-    # 4. Imputer les valeurs manquantes
     print("\n--- Étape 4 : Imputation des valeurs manquantes ---")
     df = imputer_valeurs_manquantes(df)
 
-    # 5. Feature Engineering
     print("\n--- Étape 5 : Feature Engineering ---")
     df = feature_engineering(df)
-
-    # 6. Encoder
+    print(f"🔎 Colonnes après feature engineering : {df.shape[1]}")
     print("\n--- Étape 6 : Encodage ---")
     df = encoder_colonnes(df)
 
-    # Sauvegarder
     os.makedirs(os.path.dirname(chemin_output), exist_ok=True)
     df.to_csv(chemin_output, index=False)
+    print(f"\n✅ Fichier propre sauvegardé : {chemin_output}")
+    print(f"   Dimensions finales : {df.shape[0]} lignes x {df.shape[1]} colonnes")
 
+    print("\n--- Étape 7 : Split Train/Test (80/20 stratifié) ---")
+    from sklearn.model_selection import train_test_split
+
+    X = df.drop("Churn", axis=1)
+    y = df["Churn"]
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y
+    )
+
+    X_train = X_train.reset_index(drop=True)
+    X_test  = X_test.reset_index(drop=True)
+    y_train = y_train.reset_index(drop=True)
+    y_test  = y_test.reset_index(drop=True)
+
+    os.makedirs("../data/train_test", exist_ok=True)
+    X_train.to_csv("../data/train_test/X_train.csv", index=False)
+    X_test.to_csv("../data/train_test/X_test.csv",   index=False)
+    y_train.to_csv("../data/train_test/y_train.csv", index=False)
+    y_test.to_csv("../data/train_test/y_test.csv",   index=False)
+
+    train = pd.concat([X_train, y_train], axis=1)
+    test  = pd.concat([X_test,  y_test],  axis=1)
+    train.to_csv("../data/train_test/train.csv", index=False)
+    test.to_csv("../data/train_test/test.csv",   index=False)
+
+    print(f"✅ Train : {X_train.shape[0]} lignes | Test : {X_test.shape[0]} lignes")
+    print("✅ Split train/test sauvegarde dans data/train_test/")
     print("\n" + "=" * 55)
-    print(f"✅  Fichier propre sauvegardé : {chemin_output}")
-    print(f"   Dimensions finales : {df.shape[0]} lignes × {df.shape[1]} colonnes")
+    print("PREPROCESSING TERMINE")
     print("=" * 55)
 
     return df
