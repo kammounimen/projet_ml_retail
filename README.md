@@ -1,7 +1,9 @@
 # Projet ML Retail — Analyse Comportementale Clientèle
 
-Projet de Machine Learning complet sur une base de données e-commerce de cadeaux (4372 clients, 52 features).  
-Objectif : segmenter les clients, prédire le churn et estimer le revenu futur.
+Projet de Machine Learning complet sur une base de données e-commerce 
+de cadeaux (4 372 clients, 52 features).  
+Objectif : segmenter les clients, prédire le churn et estimer 
+le panier moyen par transaction.
 
 ---
 
@@ -9,9 +11,9 @@ Objectif : segmenter les clients, prédire le churn et estimer le revenu futur.
 
 | Tâche | Algorithme | Résultat |
 |-------|-----------|---------|
-| Segmentation | KMeans + PCA | 7 clusters — Silhouette = 0.4516 |
-| Churn | RandomForest + Optuna | ROC-AUC = 0.9922 — Accuracy = 0.96 |
-| Revenu | RandomForest + Optuna | MAE = 562.77 £ — R² = 0.78 |
+| Segmentation | KMeans + PCA (K=3) | 3 segments — fallback automatique |
+| Churn | RandomForest + Optuna (30 trials) | ROC-AUC = 0.8681 — Accuracy = 80% |
+| Panier moyen | RandomForest + Optuna (30 trials) | MAE = 15.72 £ — R² = 0.802 |
 
 ---
 
@@ -19,75 +21,75 @@ Objectif : segmenter les clients, prédire le churn et estimer le revenu futur.
 
 Ce projet couvre la chaîne complète de traitement en data science :
 
-- Exploration et visualisation des données (valeurs manquantes, outliers, corrélations)
-- Nettoyage et préparation des données (preprocessing complet)
-- Clustering non supervisé (KMeans + PCA, K optimisé par silhouette score)
-- Classification supervisée (prédiction du churn — RandomForest + Optuna)
-- Régression supervisée (prédiction du revenu — RandomForest + Optuna)
-- Déploiement d'une interface web avec Flask
+- Exploration et visualisation des données (valeurs manquantes, 
+  outliers, corrélations)
+- Nettoyage et préparation des données (pipeline complet en 8 étapes)
+- Clustering non supervisé (KMeans + PCA, K=3 sélectionné 
+  automatiquement par silhouette score avec fallback)
+- Classification supervisée (prédiction du churn — 
+  RandomForest + Optuna, 30 trials)
+- Régression supervisée (estimation du panier moyen — 
+  RandomForest + Optuna, 30 trials)
+- Déploiement d'une interface web avec Flask 
+  ("Analyse Client en Temps Réel")
 
 ---
 
 ## Structure du projet
-
-```
 projet_ml_retail/
 ├── app/
 │   ├── templates/
-│   │   └── index.html                  # Interface web (formulaire + résultats)
-│   └── app.py                          # Application Flask
+│   │   └── index.html              # Interface web (formulaire + résultats)
+│   └── app.py                      # Application Flask
 ├── data/
 │   ├── processed/
-│   │   ├── customers_segmented.csv     # Données avec labels de clusters
-│   │   └── data_clean.csv              # Données nettoyées (86 colonnes)
+│   │   ├── customers_segmented.csv # Données avec labels de clusters
+│   │   └── data_clean.csv          # Données nettoyées (4320 lignes, 48 col.)
 │   ├── raw/
-│   │   └── data_original.csv           # Données brutes (4372 lignes, 52 colonnes)
+│   │   └── data_original.csv       # Données brutes (4372 lignes, 52 col.)
 │   └── train_test/
-│       ├── test.csv                    # Données test complètes (875 lignes)
-│       ├── train.csv                   # Données train complètes (3497 lignes)
-│       ├── X_test.csv                  # Features test
-│       ├── X_train.csv                 # Features train
-│       ├── y_test.csv                  # Target test
-│       └── y_train.csv                 # Target train
+│       ├── train.csv               # Données train (3456 lignes)
+│       ├── test.csv                # Données test (864 lignes)
+│       ├── X_train_norm.csv        # Features train normalisées
+│       └── X_test_norm.csv         # Features test normalisées
 ├── models/
-│   ├── churn_columns.pkl               # Colonnes du modèle churn
-│   ├── churn_model.pkl                 # Modèle RandomForest churn
-│   ├── cluster_features.pkl            # Features utilisées pour le clustering
-│   ├── kmeans.pkl                      # Modèle KMeans
-│   ├── pca.pkl                         # Modèle PCA
-│   ├── reg_columns.pkl                 # Colonnes du modèle régression
-│   ├── regression_model.pkl            # Modèle RandomForest régression
-│   ├── scaler_clf.pkl                  # Scaler classification
-│   ├── scaler_cluster.pkl              # Scaler clustering
-│   └── scaler_reg.pkl                  # Scaler régression
-├── notebooks/
-│   └── 01_exploration.ipynb            # Exploration initiale des données
+│   ├── kmeans.pkl                  # Modèle KMeans (K=3)
+│   ├── pca.pkl                     # Modèle PCA (4 composantes, 96.5%)
+│   ├── scaler_cluster.pkl          # Scaler clustering
+│   ├── cluster_features.pkl        # Features utilisées pour le clustering
+│   ├── churn_model.pkl             # Modèle RandomForest churn
+│   ├── scaler_clf.pkl              # Scaler classification
+│   ├── churn_columns.pkl           # Colonnes du modèle churn
+│   ├── regression_model.pkl        # Modèle RandomForest panier moyen
+│   ├── scaler_reg.pkl              # Scaler régression
+│   └── reg_columns.pkl             # Colonnes du modèle régression
 ├── reports/
-│   ├── boxplots_outliers.png           # Boxplots des valeurs aberrantes
-│   ├── cluster_analysis.csv            # Statistiques moyennes par cluster
-│   ├── cluster_intervals_clean.csv     # Intervalles min/max par cluster
-│   ├── clustering_metrics.png          # Silhouette scores par K
-│   ├── clusters_2d.png                 # Visualisation 2D des clusters
-│   ├── confusion_RandomForest_Churn.png# Matrice de confusion
-│   ├── distribution_churn.png          # Distribution de la variable cible
-│   ├── feature_importance_churn.csv    # Importance des features (tableau)
-│   ├── feature_importance_churn.png    # Importance des features (graphique)
-│   ├── matrice_correlation.png         # Heatmap de corrélation
-│   ├── pca_2d.png                      # Projection PCA 2D
-│   ├── pca_variance.png                # Variance expliquée par composante
-│   ├── regression_reel_vs_predit.png   # Réel vs Prédit régression
-│   ├── roc_RandomForest_Churn.png      # Courbe ROC
-│   └── valeurs_manquantes.png          # Visualisation des NaN
+│   ├── model_metrics.json          # Métriques sauvegardées
+│   ├── cluster_intervals_clean.csv # Intervalles min/max par cluster
+│   ├── recommended_labels.txt      # Labels recommandés pour clusters
+│   ├── pca_variance.png            # Variance expliquée par composante
+│   ├── pca_2d.png                  # Projection PCA 2D
+│   ├── clusters_2d.png             # Visualisation 2D des 3 clusters
+│   ├── confusion_RandomForest_Churn.png  # Matrice de confusion
+│   ├── roc_RandomForest_Churn.png        # Courbe ROC (AUC=0.87)
+│   ├── feature_importance_churn.png      # Top 20 features importantes
+│   ├── regression_reel_vs_predit.png     # Réel vs Prédit régression
+│   ├── distribution_churn.png            # Distribution variable cible
+│   ├── matrice_correlation.png           # Heatmap de corrélation
+│   ├── boxplots_outliers.png             # Boxplots outliers
+│   └── valeurs_manquantes.png            # Visualisation des NaN
 ├── src/
-│   ├── predict.py                      # Prédiction pour un nouveau client
-│   ├── preprocessing.py                # Pipeline complet de nettoyage + split
-│   ├── test.py                         # Analyse détaillée des clusters
-│   ├── train_model.py                  # Clustering + Classification + Régression
-│   └── utils.py                        # Fonctions utilitaires réutilisables
+│   ├── cluster_labels.py           # Labels métier des 3 clusters
+│   ├── preprocessing.py            # Pipeline complet (8 étapes)
+│   ├── train_model.py              # Clustering + Classification + Régression
+│   ├── predict.py                  # Prédiction pour un nouveau client
+│   ├── test.py                     # Analyse détaillée des clusters
+│   ├── debug_clustering.py         # Diagnostic du clustering
+│   ├── diagnostic_complet.py       # Diagnostic complet des clusters
+│   └── utils.py                    # Fonctions utilitaires réutilisables
 ├── .gitignore
 ├── README.md
 └── requirements.txt
-```
 
 ---
 
@@ -132,15 +134,20 @@ python preprocessing.py
 ```
 
 Ce que ça fait :
-- Parse les dates (RegistrationDate) et les IPs (LastLoginIP)
-- Supprime les colonnes inutiles et dangereuses (CustomerID, ChurnRiskCategory...)
-- Corrige les valeurs aberrantes (SupportTicketsCount, SatisfactionScore)
-- Impute les valeurs manquantes (médiane pour numériques, "Inconnu" pour catégorielles)
-- Feature engineering : MonetaryPerDay, AvgBasketValue, TenureRatio, CancelRatio
-- Encodage : ordinal + one-hot (Country gérée dans train_model.py)
-- Split stratifié 80/20
+- Parse les dates (RegistrationDate → RegAnciennete) et les IPs 
+  (LastLoginIP → IP_privee)
+- Supprime **28 colonnes** inutiles ou à risque de data leakage 
+  (CustomerID, ChurnRiskCategory, LoyaltyLevel, RFMSegment...)
+- Corrige les valeurs aberrantes (SupportTicketsCount : -1 et 999 → NaN)
+- Supprime les 52 lignes avec MonetaryTotal ≤ 0
+- Feature engineering : AvgBasketValue, CancelRatio
+- Encodage : ordinal (PreferredTimeOfDay) + one-hot encoding
+- Split stratifié 80/20 (anti data leakage)
+- Imputation post-split : Age (médiane=49), SupportTicketsCount (médiane=2)
+- Normalisation post-split : StandardScaler sur 24 colonnes continues
 
-Résultat : `data/processed/data_clean.csv` + 6 fichiers dans `data/train_test/`
+Résultat : `data/processed/data_clean.csv` (4320 lignes × 48 colonnes)  
++ `data/train_test/train.csv` (3456 lignes) + `test.csv` (864 lignes)
 
 ### Étape 2 — Entraînement des modèles
 
@@ -149,12 +156,15 @@ python train_model.py
 ```
 
 Ce que ça fait :
-- Charge train.csv et test.csv séparément (pas de re-split)
-- Target Encoding de Country sur train uniquement (anti data leakage)
-- Clustering KMeans + PCA (K=7 optimisé automatiquement par silhouette score)
-- Classification churn : RandomForest + Optuna (20 trials)
-- Régression revenu : RandomForest + Optuna (20 trials)
-- Sauvegarde les 9 modèles dans `models/`
+- Charge `train.csv` et `test.csv` séparément (pas de re-split)
+- **Clustering** : KMeans + PCA (4 composantes, 96.5% variance), 
+  K=3 (fallback automatique — les clients Ultra-VIP forment 
+  un cluster isolé à 0.3%)
+- **Classification churn** : RandomForest + Optuna (30 trials), 
+  ROC-AUC=0.87, Accuracy=80%
+- **Régression panier moyen** : RandomForest + Optuna (30 trials), 
+  MAE=15.72£, R²=0.802
+- Sauvegarde les modèles dans `models/`
 - Génère les graphiques dans `reports/`
 
 Durée : environ 3 à 5 minutes
@@ -165,8 +175,10 @@ Durée : environ 3 à 5 minutes
 python test.py
 ```
 
-Affiche les statistiques détaillées (moyenne, min, max) et le taux de churn par cluster.  
-Génère `reports/cluster_intervals_clean.csv`.
+Affiche les statistiques détaillées (moyenne, min, max, taux de churn) 
+par cluster sur les données brutes non normalisées.  
+Génère `reports/cluster_intervals_clean.csv` et 
+`reports/recommended_labels.txt`.
 
 ### Étape 4 — Test de prédiction
 
@@ -174,7 +186,8 @@ Génère `reports/cluster_intervals_clean.csv`.
 python predict.py
 ```
 
-Prédit le cluster, le risque de churn et le revenu estimé pour un client test.
+Prédit le cluster, le risque de churn et le panier moyen estimé 
+pour un client test défini dans le script.
 
 ### Étape 5 — Interface web Flask
 
@@ -185,45 +198,68 @@ python app.py
 
 Ouvrir dans le navigateur : [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
-Renseigner les 6 champs et cliquer sur Prédire pour obtenir :
-- Le segment client (cluster)
-- Le risque de churn (stable ou à risque)
+Renseigner les **9 champs** et cliquer sur **"Analyser ce client"** 
+pour obtenir :
+- Le segment client (Cluster 0, 1 ou 2) avec label métier
+- Le statut churn (Stable / À surveiller / À risque)
 - La probabilité de churn en %
-- Le revenu estimé en £
+- Le panier moyen estimé en £
+- Des recommandations métier personnalisées
+
+---
+
+## Résultats des 3 clusters (données brutes)
+
+| Cluster | Profil | Nb clients | % | Churn |
+|---------|--------|-----------|---|-------|
+| 0 | Clients faible activité (Freq. moy. 2, Monetary 627£) | 2 468 | 57.9% | 29.4% |
+| 1 | Clients Ultra-VIP (Freq. moy. 105, Monetary 110 482£) | 13 | 0.3% | **53.8%** ⚠️ |
+| 2 | Clients Premium réguliers (Freq. moy. 9, Monetary 2 986£) | 1 779 | 41.8% | 38.3% |
+
+---
+
+## Top 10 features — Prédiction du churn
+
+| Feature | Importance |
+|---------|-----------|
+| CustomerTenureDays | 18.1% |
+| RegAnciennete | 16.8% |
+| TotalTransactions | 8.0% |
+| AvgDaysBetweenPurchases | 7.3% |
+| TotalQuantity | 7.2% |
+| Frequency | 6.8% |
+| MonetaryTotal | 6.7% |
+| UniqueProducts | 4.7% |
+| AvgBasketValue | 3.6% |
+| AvgQuantityPerTransaction | 3.0% |
 
 ---
 
 ## Choix techniques — Anti data leakage
 
-- **Target Encoding Country** : fit sur train uniquement, appliqué sur test
-- **StandardScaler** : fit sur X_train uniquement, transform sur X_test
-- **Pas de re-split** dans train_model.py — on charge directement train.csv et test.csv
-- **Features retirées** de la classification et régression : CancelRatio, TenureRatio, MonetaryPerDay, AvgBasketValue (corrélées au target)
-
----
-
-## Résultats des clusters
-
-| Cluster | Profil | Nb clients | Taux churn |
-|---------|--------|-----------|------------|
-| 0 | Clients occasionnels | 1277 | 10.0% |
-| 1 | Clients à risque — inactifs | 793 | 100.0% |
-| 2 | Clients VIP | 7 | 0.0% |
-| 3 | Clients occasionnels | 1230 | 19.5% |
-| 4 | Gros acheteurs | 4 | 0.0% |
-| 5 | Clients peu actifs | 16 | 12.5% |
-| 6 | Clients fidèles | 170 | 0.0% |
+- **28 colonnes supprimées** : ChurnRiskCategory, AccountStatus, 
+  LoyaltyLevel, RFMSegment, SatisfactionScore et autres features 
+  calculées à partir de Churn
+- **Target Encoding Country** : fit sur train uniquement, 
+  appliqué sur test
+- **StandardScaler** : fit sur X_train uniquement, 
+  transform sur X_test
+- **Imputation post-split** : médiane calculée sur train, 
+  appliquée sur test
+- **Pas de re-split** dans train_model.py — on charge 
+  directement train.csv et test.csv
 
 ---
 
 ## Dépendances principales
-
-- pandas, numpy
-- scikit-learn
-- matplotlib, seaborn
-- flask
-- joblib
-- optuna
+pandas
+numpy
+scikit-learn
+matplotlib
+seaborn
+flask
+joblib
+optuna
 
 ---
 
