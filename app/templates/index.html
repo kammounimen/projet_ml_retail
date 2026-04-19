@@ -3,256 +3,591 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Analytics — ML Retail</title>
+    <title>RetailIQ — Customer Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg:        #0a0c10;
+            --surface:   #111318;
+            --surface2:  #181c24;
+            --border:    #1f2430;
+            --border2:   #2a3040;
+            --text:      #e8eaf0;
+            --muted:     #5a6280;
+            --accent:    #4f8ef7;
+            --accent2:   #7c3aed;
+            --green:     #22c55e;
+            --orange:    #f59e0b;
+            --red:       #ef4444;
+            --mono:      'DM Mono', monospace;
+            --sans:      'DM Sans', sans-serif;
+            --display:   'Syne', sans-serif;
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
-            padding: 40px 20px;
-            color: #333;
+            overflow-x: hidden;
         }
 
-        h1 {
-            text-align: center;
-            font-size: 28px;
-            margin-bottom: 8px;
-            color: #2c3e50;
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 60% 40% at 10% 20%, rgba(79,142,247,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 50% at 90% 80%, rgba(124,58,237,0.05) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
         }
 
-        .subtitle {
-            text-align: center;
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 32px;
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(79,142,247,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(79,142,247,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
         }
 
-        /* ── Formulaire ── */
-        .form-card {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            max-width: 380px;
-            margin: 0 auto 32px auto;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        .wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
         }
 
-        .form-card h2 {
-            font-size: 16px;
-            color: #555;
-            margin-bottom: 18px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 48px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
         }
 
-        .form-group {
-            margin-bottom: 14px;
+        .logo { display: flex; align-items: center; gap: 12px; }
+
+        .logo-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
         }
+
+        .logo-text {
+            font-family: var(--display);
+            font-weight: 800; font-size: 20px; letter-spacing: -0.5px;
+        }
+
+        .logo-text span { color: var(--accent); }
+
+        .header-badge {
+            font-family: var(--mono); font-size: 11px;
+            color: var(--muted); background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 6px 12px; border-radius: 20px; letter-spacing: 0.5px;
+        }
+
+        .page-title { margin-bottom: 36px; }
+
+        .page-title h1 {
+            font-family: var(--display); font-size: 32px;
+            font-weight: 700; letter-spacing: -1px; margin-bottom: 6px;
+        }
+
+        .page-title p { color: var(--muted); font-size: 14px; font-weight: 300; }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 800px) { .main-layout { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(79,142,247,0.3), transparent);
+        }
+
+        .card-title {
+            font-family: var(--display); font-size: 13px; font-weight: 600;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 24px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 3px; height: 14px;
+            background: var(--accent); border-radius: 2px;
+        }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+        .form-group.full { grid-column: 1 / -1; }
 
         .form-group label {
-            display: block;
-            font-size: 12px;
-            color: #777;
-            margin-bottom: 4px;
-            font-weight: 500;
+            font-family: var(--mono); font-size: 10px;
+            letter-spacing: 1px; color: var(--muted); text-transform: uppercase;
         }
 
         .form-group input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
             border-radius: 8px;
-            font-size: 14px;
-            background: #fafafa;
-            transition: border-color 0.2s;
+            padding: 10px 14px;
+            font-family: var(--mono); font-size: 14px; color: var(--text);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            width: 100%;
         }
 
         .form-group input:focus {
             outline: none;
-            border-color: #7b68ee;
-            background: white;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(79,142,247,0.1);
         }
 
-        .btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 25px;
-            background: #7b68ee;
+        .form-group input::placeholder { color: var(--muted); opacity: 0.5; }
+
+        .input-hint { font-size: 10px; color: var(--muted); opacity: 0.6; }
+
+        .btn-predict {
+            width: 100%; margin-top: 20px; padding: 14px;
+            border: none; border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
             color: white;
-            font-size: 15px;
-            font-weight: 500;
+            font-family: var(--display); font-size: 14px;
+            font-weight: 600; letter-spacing: 0.5px;
             cursor: pointer;
-            margin-top: 8px;
-            transition: background 0.2s, transform 0.1s;
+            transition: opacity 0.2s, transform 0.1s;
+            position: relative; overflow: hidden;
         }
 
-        .btn:hover {
-            background: #6a57dd;
-            transform: translateY(-1px);
+        .btn-predict::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
+            transform: translateX(-100%);
+            transition: transform 0.4s;
         }
 
-        /* ── Résultats ── */
-        .results-grid {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            max-width: 900px;
-            margin: 0 auto;
+        .btn-predict:hover::after { transform: translateX(100%); }
+        .btn-predict:hover { opacity: 0.92; transform: translateY(-1px); }
+        .btn-predict:active { transform: translateY(0); }
+
+        .results-panel { display: flex; flex-direction: column; gap: 20px; }
+
+        .empty-state {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 16px; padding: 60px 28px; text-align: center;
         }
 
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 22px 20px;
-            width: 200px;
-            text-align: center;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-            transition: transform 0.2s;
+        .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+
+        .empty-state h3 {
+            font-family: var(--display); font-size: 18px;
+            color: var(--muted); margin-bottom: 8px;
         }
 
-        .card:hover { transform: translateY(-3px); }
+        .empty-state p { font-size: 13px; color: var(--muted); opacity: 0.6; }
 
-        .card-icon {
-            font-size: 28px;
-            margin-bottom: 10px;
+        .metrics-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+
+        .metric-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 22px 20px;
+            position: relative; overflow: hidden;
+            animation: fadeUp 0.4s ease both;
         }
 
-        .card-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #aaa;
-            margin-bottom: 8px;
-            font-weight: 500;
+        .metric-card:nth-child(2) { animation-delay: 0.05s; }
+        .metric-card:nth-child(3) { animation-delay: 0.10s; }
+        .metric-card:nth-child(4) { animation-delay: 0.15s; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
-        .card-value {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
-            line-height: 1.3;
+        .metric-label {
+            font-family: var(--mono); font-size: 10px;
+            letter-spacing: 1.2px; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 12px;
         }
 
-        .card-value.green  { color: #27ae60; }
-        .card-value.red    { color: #e74c3c; }
-        .card-value.blue   { color: #3498db; }
-        .card-value.purple { color: #7b68ee; }
-
-        .card-sub {
-            font-size: 11px;
-            color: #bbb;
-            margin-top: 6px;
+        .metric-value {
+            font-family: var(--display); font-size: 26px;
+            font-weight: 700; line-height: 1; margin-bottom: 6px;
         }
 
-        /* ── Erreur ── */
+        .metric-sub { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+        .metric-card.green  { border-color: rgba(34,197,94,0.2);  }
+        .metric-card.green  .metric-value { color: var(--green);  }
+        .metric-card.orange { border-color: rgba(245,158,11,0.2); }
+        .metric-card.orange .metric-value { color: var(--orange); }
+        .metric-card.red    { border-color: rgba(239,68,68,0.2);  }
+        .metric-card.red    .metric-value { color: var(--red);    }
+        .metric-card.blue   { border-color: rgba(79,142,247,0.2); }
+        .metric-card.blue   .metric-value { color: var(--accent); }
+        .metric-card.purple { border-color: rgba(124,58,237,0.2); }
+        .metric-card.purple .metric-value { color: #a78bfa;       }
+
+        .proba-bar-wrap {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 22px 20px;
+            animation: fadeUp 0.4s ease 0.2s both;
+        }
+
+        .proba-bar-label {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 12px;
+        }
+
+        .proba-bar-label span:first-child {
+            font-family: var(--mono); font-size: 10px;
+            letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted);
+        }
+
+        .proba-bar-label .proba-pct {
+            font-family: var(--display); font-size: 20px; font-weight: 700;
+        }
+
+        .proba-track {
+            height: 8px; background: var(--surface2);
+            border-radius: 99px; overflow: hidden;
+        }
+
+        .proba-fill {
+            height: 100%; border-radius: 99px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .proba-fill.green  { background: linear-gradient(90deg, #16a34a, var(--green));  }
+        .proba-fill.orange { background: linear-gradient(90deg, #d97706, var(--orange)); }
+        .proba-fill.red    { background: linear-gradient(90deg, #b91c1c, var(--red));    }
+
+        .cluster-banner {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 20px;
+            display: flex; align-items: center; gap: 16px;
+            animation: fadeUp 0.4s ease 0.25s both;
+        }
+
+        .cluster-dot {
+            width: 48px; height: 48px; border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--display); font-size: 20px; font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .cluster-info { flex: 1; }
+
+        .cluster-info .label {
+            font-family: var(--mono); font-size: 10px;
+            letter-spacing: 1px; color: var(--muted);
+            text-transform: uppercase; margin-bottom: 4px;
+        }
+
+        .cluster-info .name {
+            font-family: var(--display); font-size: 17px; font-weight: 700;
+        }
+
+        .cluster-info .sub {
+            font-size: 12px; color: var(--muted);
+            margin-top: 2px; font-family: var(--mono);
+        }
+
+        .reco-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 22px 20px;
+            animation: fadeUp 0.4s ease 0.3s both;
+        }
+
+        .reco-title {
+            font-family: var(--mono); font-size: 10px;
+            letter-spacing: 1.2px; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 14px;
+        }
+
+        .reco-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+        .reco-list li {
+            display: flex; align-items: flex-start; gap: 10px;
+            font-size: 13px; color: #c0c8d8; line-height: 1.5;
+        }
+
+        .reco-list li::before {
+            content: '→'; color: var(--accent);
+            font-family: var(--mono); flex-shrink: 0; margin-top: 1px;
+        }
+
+        .model-info {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 20px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+            animation: fadeUp 0.4s ease 0.35s both;
+        }
+
+        .model-stat { text-align: center; }
+
+        .model-stat .val {
+            font-family: var(--display); font-size: 18px;
+            font-weight: 700; color: var(--accent);
+        }
+
+        .model-stat .lbl {
+            font-family: var(--mono); font-size: 10px;
+            color: var(--muted); letter-spacing: 0.5px; margin-top: 4px;
+        }
+
         .error-box {
-            background: #ffeaea;
-            border: 1px solid #f5c6c6;
-            border-radius: 8px;
-            padding: 14px 18px;
-            max-width: 500px;
-            margin: 0 auto;
-            color: #c0392b;
-            font-size: 13px;
-            text-align: center;
+            background: rgba(239,68,68,0.08);
+            border: 1px solid rgba(239,68,68,0.25);
+            border-radius: 10px; padding: 14px 18px;
+            color: #fca5a5; font-family: var(--mono); font-size: 12px;
+            animation: fadeUp 0.3s ease both;
         }
 
-        hr {
-            border: none;
-            border-top: 1px solid #eee;
-            margin: 24px 0;
+        footer {
+            text-align: center; padding-top: 40px;
+            font-family: var(--mono); font-size: 11px;
+            color: var(--muted); opacity: 0.5;
         }
     </style>
 </head>
 <body>
+<div class="wrapper">
 
-    <h1>🎁 Customer Analytics App</h1>
-    <p class="subtitle">Prédiction : Segment · Churn · Revenu estimé</p>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">📊</div>
+            <div class="logo-text">Retail<span>IQ</span></div>
+        </div>
+        <div class="header-badge">ML · Random Forest · K={{ best_k if best_k is defined else '?' }}</div>
+    </header>
 
-    <!-- Formulaire -->
-    <div class="form-card">
-        <h2>Données client</h2>
-        <form method="POST">
-            <div class="form-group">
-                <label>Recency (jours depuis dernier achat)</label>
-                <input type="number" step="any" name="Recency" placeholder="ex : 30" required>
-            </div>
-            <div class="form-group">
-                <label>Frequency (nombre de commandes)</label>
-                <input type="number" step="any" name="Frequency" placeholder="ex : 8" required>
-            </div>
-            <div class="form-group">
-                <label>MonetaryTotal (total dépensé £)</label>
-                <input type="number" step="any" name="MonetaryTotal" placeholder="ex : 500" required>
-            </div>
-            <div class="form-group">
-                <label>CustomerTenure (ancienneté en jours)</label>
-                <input type="number" step="any" name="CustomerTenure" placeholder="ex : 365" required>
-            </div>
-            <div class="form-group">
-                <label>AvgDaysBetween (délai moyen entre achats)</label>
-                <input type="number" step="any" name="AvgDaysBetween" placeholder="ex : 20" required>
-            </div>
-            <div class="form-group">
-                <label>TotalTrans (total transactions)</label>
-                <input type="number" step="any" name="TotalTrans" placeholder="ex : 15" required>
-            </div>
-            <button type="submit" class="btn">🔮 Prédire</button>
-        </form>
+    <div class="page-title">
+        <h1>Analyse Client en Temps Réel</h1>
+        <p>Segmentation · Prédiction de churn · Estimation du panier moyen</p>
     </div>
 
-    <!-- Erreur -->
-    {% if error %}
-    <div class="error-box">
-        ⚠️ Erreur : {{ error }}
-    </div>
-    {% endif %}
-
-    <!-- Résultats -->
-    {% if cluster is not none and error is none %}
-    <hr>
-    <div class="results-grid">
+    <div class="main-layout">
 
         <div class="card">
-            <div class="card-icon">🎯</div>
-            <div class="card-label">Segment</div>
-            <div class="card-value purple">{{ segment }}</div>
-            <div class="card-sub">Cluster {{ cluster }}</div>
+            <div class="card-title">Données du client</div>
+            <form method="POST">
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label>Frequency</label>
+                        <input type="number" step="any" name="Frequency"
+                               placeholder="ex : 8"
+                               value="{{ form_data.get('Frequency', '') }}" required>
+                        <span class="input-hint">Nb de commandes</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>MonetaryTotal (£)</label>
+                        <input type="number" step="any" name="MonetaryTotal"
+                               placeholder="ex : 500"
+                               value="{{ form_data.get('MonetaryTotal', '') }}" required>
+                        <span class="input-hint">Total dépensé</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>CustomerTenureDays</label>
+                        <input type="number" step="any" name="CustomerTenureDays"
+                               placeholder="ex : 365"
+                               value="{{ form_data.get('CustomerTenureDays', '') }}" required>
+                        <span class="input-hint">Ancienneté (jours)</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>AvgDaysBetweenPurchases</label>
+                        <input type="number" step="any" name="AvgDaysBetweenPurchases"
+                               placeholder="ex : 20"
+                               value="{{ form_data.get('AvgDaysBetweenPurchases', '') }}" required>
+                        <span class="input-hint">Délai moyen (jours)</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>TotalTransactions</label>
+                        <input type="number" step="any" name="TotalTransactions"
+                               placeholder="ex : 15"
+                               value="{{ form_data.get('TotalTransactions', '') }}" required>
+                        <span class="input-hint">Nb total transactions</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>TotalQuantity</label>
+                        <input type="number" step="any" name="TotalQuantity"
+                               placeholder="ex : 120"
+                               value="{{ form_data.get('TotalQuantity', '') }}">
+                        <span class="input-hint">Unités achetées</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>UniqueProducts</label>
+                        <input type="number" step="any" name="UniqueProducts"
+                               placeholder="ex : 30"
+                               value="{{ form_data.get('UniqueProducts', '') }}">
+                        <span class="input-hint">Produits distincts</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" step="any" name="Age"
+                               placeholder="ex : 42"
+                               value="{{ form_data.get('Age', '') }}">
+                        <span class="input-hint">Âge du client</span>
+                    </div>
+
+                    <div class="form-group full">
+                        <label>SupportTicketsCount</label>
+                        <input type="number" step="any" name="SupportTicketsCount"
+                               placeholder="ex : 2"
+                               value="{{ form_data.get('SupportTicketsCount', '') }}">
+                        <span class="input-hint">Tickets support ouverts</span>
+                    </div>
+
+                </div>
+
+                <button type="submit" class="btn-predict">
+                    ⚡ Analyser ce client
+                </button>
+            </form>
         </div>
 
-        <div class="card">
-            <div class="card-icon">📉</div>
-            <div class="card-label">Risque Churn</div>
-            <div class="card-value {% if churn == 1 %}red{% else %}green{% endif %}">
-                {% if churn == 1 %}
-                    🔴 Client à risque
-                {% else %}
-                    🟢 Client stable
-                {% endif %}
+        <div class="results-panel">
+
+            {% if error %}
+            <div class="error-box">⚠ {{ error }}</div>
+            {% endif %}
+
+            {% if segment is defined and segment and error is none %}
+
+            <div class="cluster-banner">
+                <div class="cluster-dot">{{ cluster }}</div>
+                <div class="cluster-info">
+                    <div class="label">Segment client</div>
+                    <div class="name">{{ segment }}</div>
+                    <div class="sub">Cluster {{ cluster }} · KMeans K={{ best_k if best_k is defined else '?' }}</div>
+                </div>
             </div>
-            <div class="card-sub">Prédiction binaire</div>
-        </div>
 
-        <div class="card">
-            <div class="card-icon">📊</div>
-            <div class="card-label">Probabilité</div>
-            <div class="card-value blue">{{ "%.0f"|format(proba * 100) }}%</div>
-            <div class="card-sub">Confiance churn</div>
-        </div>
+            <div class="metrics-row">
+                <div class="metric-card {{ risk_color }}">
+                    <div class="metric-label">Statut Churn</div>
+                    <div class="metric-value">{{ churn_status }}</div>
+                    <div class="metric-sub">
+                        {% if risk_level == 'Faible' %}
+                            Client Fidèle
+                        {% elif risk_level == 'Modéré' %}
+                            Comportement à surveiller
+                        {% else %}
+                            Départ probable
+                        {% endif %}
+                    </div>
+                </div>
 
-        <div class="card">
-            <div class="card-icon">💰</div>
-            <div class="card-label">Revenu estimé</div>
-            <div class="card-value green">{{ revenue }} £</div>
-            <div class="card-sub">Prévision modèle</div>
-        </div>
+                <div class="metric-card">
+                    <div class="metric-label">Risque de Départ</div>
+                    <div class="metric-value">{{ proba }}%</div>
+                    <div class="metric-sub">Niveau : {{ risk_level }}</div>
+                </div>
 
+                <div class="metric-card">
+                    <div class="metric-label">Panier Moyen Est.</div>
+                    <div class="metric-value">{{ panier }} £</div>
+                    <div class="metric-sub">Valeur par transaction</div>
+                </div>
+            </div>
+            <div class="proba-bar-wrap">
+                <div class="proba-bar-label">
+                    <span>Probabilité de churn</span>
+                    <span class="proba-pct" style="color:
+                        {% if risk_color == 'green' %}var(--green)
+                        {% elif risk_color == 'orange' %}var(--orange)
+                        {% else %}var(--red){% endif %}">
+                        {{ proba }}%
+                    </span>
+                </div>
+                <div class="proba-track">
+                    <div class="proba-fill {{ risk_color }}"
+                         style="width: {{ proba }}%"></div>
+                </div>
+            </div>
+
+            <div class="reco-card">
+                <div class="reco-title">Recommandations</div>
+                <ul class="reco-list">
+                    {% if recommendations %}
+                        {% for rec in recommendations %}
+                            <li>{{ rec }}</li>
+                        {% endfor %}
+                    {% else %}
+                        <li>Client stable — maintenir la relation via des communications régulières.</li>
+                        <li>Proposer des produits complémentaires (cross-sell) selon son profil.</li>
+                        <li>Valoriser sa fidélité avec des avantages exclusifs.</li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="model-info">
+                <div class="model-stat">
+                    <div class="val">{{ model_roc_auc if model_roc_auc is defined else '—' }}</div>
+                    <div class="lbl">ROC-AUC</div>
+                </div>
+                <div class="model-stat">
+                    <div class="val">{{ model_accuracy if model_accuracy is defined else '—' }}</div>
+                    <div class="lbl">Accuracy</div>
+                </div>
+                <div class="model-stat">
+                    <div class="val">{{ model_mae if model_mae is defined else '—' }} £</div>
+                    <div class="lbl">MAE Panier</div>
+                </div>
+            </div>
+
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">🔍</div>
+                <h3>Aucune analyse lancée</h3>
+                <p>Renseignez les données du client<br>et cliquez sur Analyser pour obtenir les prédictions.</p>
+            </div>
+            {% endif %}
+
+        </div>
     </div>
-    {% endif %}
 
+    <footer>RetailIQ · Random Forest · Anti Data Leakage · ROC-AUC {{ model_roc_auc if model_roc_auc is defined else '—' }}</footer>
+
+</div>
 </body>
 </html>

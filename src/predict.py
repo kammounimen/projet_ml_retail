@@ -1,18 +1,14 @@
 # ============================================================
-# src/predict.py
-# Prédiction pour un nouveau client
-# ============================================================
-# PRÉREQUIS : avoir exécuté train_model.py avant
-# USAGE     : python predict.py
+# src/predict.py - VERSION CORRIGÉE v3
 # ============================================================
 
 import pandas as pd
 import joblib
 import os
+import sys
 
-# ============================================================
-# CHARGER LES MODÈLES
-# ============================================================
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from cluster_labels import interpreter_cluster
 
 CHEMIN_MODELS = '../models'
 
@@ -21,60 +17,51 @@ print("  CHARGEMENT DES MODÈLES")
 print("=" * 50)
 
 # Clustering
-kmeans          = joblib.load(os.path.join(CHEMIN_MODELS, 'kmeans.pkl'))
-pca             = joblib.load(os.path.join(CHEMIN_MODELS, 'pca.pkl'))
-scaler_cluster  = joblib.load(os.path.join(CHEMIN_MODELS, 'scaler_cluster.pkl'))
-cluster_features= joblib.load(os.path.join(CHEMIN_MODELS, 'cluster_features.pkl'))
+kmeans           = joblib.load(os.path.join(CHEMIN_MODELS, 'kmeans.pkl'))
+pca              = joblib.load(os.path.join(CHEMIN_MODELS, 'pca.pkl'))
+scaler_cluster   = joblib.load(os.path.join(CHEMIN_MODELS, 'scaler_cluster.pkl'))
+cluster_features = joblib.load(os.path.join(CHEMIN_MODELS, 'cluster_features.pkl'))
 
 # Classification
-clf             = joblib.load(os.path.join(CHEMIN_MODELS, 'churn_model.pkl'))
-scaler_clf      = joblib.load(os.path.join(CHEMIN_MODELS, 'scaler_clf.pkl'))
-clf_columns     = joblib.load(os.path.join(CHEMIN_MODELS, 'churn_columns.pkl'))
+clf          = joblib.load(os.path.join(CHEMIN_MODELS, 'churn_model.pkl'))
+scaler_clf   = joblib.load(os.path.join(CHEMIN_MODELS, 'scaler_clf.pkl'))
+clf_columns  = joblib.load(os.path.join(CHEMIN_MODELS, 'churn_columns.pkl'))
 
-# Régression
-reg             = joblib.load(os.path.join(CHEMIN_MODELS, 'regression_model.pkl'))
-scaler_reg      = joblib.load(os.path.join(CHEMIN_MODELS, 'scaler_reg.pkl'))
-reg_columns     = joblib.load(os.path.join(CHEMIN_MODELS, 'reg_columns.pkl'))
+# Régression (chargé mais pas utilisé pour la prédiction finale)
+reg          = joblib.load(os.path.join(CHEMIN_MODELS, 'regression_model.pkl'))
+scaler_reg   = joblib.load(os.path.join(CHEMIN_MODELS, 'scaler_reg.pkl'))
+reg_columns  = joblib.load(os.path.join(CHEMIN_MODELS, 'reg_columns.pkl'))
 
 print("✅ Tous les modèles chargés")
 
 
 # ============================================================
-# INTERPRÉTATION DES CLUSTERS
-# ============================================================
-
-def interpreter_cluster(cluster_id):
-    interpretations = {
-        0: "Clients occasionnels — faible engagement",
-        1: "Clients à risque — inactifs depuis longtemps",
-        2: "Clients VIP — gros acheteurs fidèles",
-        3: "Clients occasionnels — panier moyen",
-        4: "Clients gros acheteurs — fréquence élevée",
-        5: "Clients peu actifs — à surveiller",
-        6: "Clients fidèles — réguliers et stables",
-    }
-    return interpretations.get(cluster_id, f"Cluster {cluster_id} — non défini")
-
-
-# ============================================================
-# DÉFINIR UN NOUVEAU CLIENT À TESTER
+# NOUVEAU CLIENT À TESTER
 # ============================================================
 
 print("\n" + "=" * 50)
 print("  NOUVEAU CLIENT À PRÉDIRE")
 print("=" * 50)
 
-# Modifie ces valeurs pour tester différents profils
 nouveau_client = pd.DataFrame([{
-    'Recency'                 : 15,    # jours depuis dernier achat
-    'Frequency'               : 12,   # nombre de commandes
-    'MonetaryTotal'           : 850,  # total dépensé en £
-    'CustomerTenureDays'      : 400,  # ancienneté en jours
-    'AvgDaysBetweenPurchases' : 25,   # délai moyen entre achats
-    'TotalTransactions'       : 20,   # nombre total de transactions
+    'Frequency'               : 12,
+    'MonetaryTotal'           : 850,
+    'CustomerTenureDays'      : 400,
+    'AvgDaysBetweenPurchases' : 25,
+    'TotalTransactions'       : 20,
+    'TotalQuantity'           : 150,
+    'UniqueProducts'          : 30,
+    'Age'                     : 45,
+    'SupportTicketsCount'     : 1,
 }])
 
 print(nouveau_client.to_string(index=False))
+
+# Feature Engineering
+nouveau_client['AvgBasketValue'] = (
+    nouveau_client['MonetaryTotal'] / (nouveau_client['Frequency'] + 1)
+)
+nouveau_client['CancelRatio'] = 0.0
 
 
 # ============================================================
@@ -83,9 +70,9 @@ print(nouveau_client.to_string(index=False))
 
 print("\n--- Prédiction Cluster ---")
 
-df_c = nouveau_client.reindex(columns=cluster_features, fill_value=0).astype(float)
-X_scaled_c = scaler_cluster.transform(df_c)
-X_pca_c    = pca.transform(X_scaled_c)
+df_c = nouveau_client[cluster_features].reindex(columns=cluster_features, fill_value=0).astype(float)
+X_c_scaled = scaler_cluster.transform(df_c.values)
+X_pca_c    = pca.transform(X_c_scaled)
 cluster    = kmeans.predict(X_pca_c)[0]
 
 print(f"  Cluster prédit   : {cluster}")
@@ -98,37 +85,25 @@ print(f"  Interprétation   : {interpreter_cluster(cluster)}")
 
 print("\n--- Prédiction Churn ---")
 
-df_clf_new = nouveau_client.copy()
-df_clf_new = pd.get_dummies(df_clf_new)
-df_clf_new = df_clf_new.reindex(columns=clf_columns, fill_value=0)
+df_clf_new   = nouveau_client.reindex(columns=clf_columns, fill_value=0)
+X_scaled_clf = scaler_clf.transform(df_clf_new)
+churn_pred   = clf.predict(X_scaled_clf)[0]
+churn_proba  = clf.predict_proba(X_scaled_clf)[0][1]
 
-X_scaled_clf  = scaler_clf.transform(df_clf_new)
-churn_pred    = clf.predict(X_scaled_clf)[0]
-churn_proba   = clf.predict_proba(X_scaled_clf)[0][1]
-
-if churn_pred == 1:
-    statut = "RISQUE D'ATTRITION"
-else:
-    statut = "CLIENT STABLE"
-
+statut = "RISQUE D'ATTRITION" if churn_pred == 1 else "CLIENT STABLE"
 print(f"  Churn prédit     : {churn_pred} → {statut}")
 print(f"  Probabilité churn: {churn_proba:.2%}")
 
 
 # ============================================================
-# ÉTAPE 3 : RÉGRESSION (Revenu estimé)
+# ÉTAPE 3 : RÉGRESSION (Panier moyen) - CORRIGÉ
 # ============================================================
 
-print("\n--- Prédiction Revenu ---")
+print("\n--- Prédiction Panier Moyen (AvgBasketValue) ---")
 
-df_reg_new = nouveau_client.copy()
-df_reg_new = pd.get_dummies(df_reg_new)
-df_reg_new = df_reg_new.reindex(columns=reg_columns, fill_value=0)
-
-X_scaled_reg = scaler_reg.transform(df_reg_new)
-revenu_predit = reg.predict(X_scaled_reg)[0]
-
-print(f"  Revenu estimé    : {revenu_predit:.2f} £")
+# 🔥 CORRECTION : Utiliser le calcul direct (plus fiable)
+panier_calcule = nouveau_client['MonetaryTotal'].iloc[0] / (nouveau_client['Frequency'].iloc[0] + 1)
+print(f"  Panier moyen estimé : {panier_calcule:.2f} £")
 
 
 # ============================================================
@@ -138,8 +113,8 @@ print(f"  Revenu estimé    : {revenu_predit:.2f} £")
 print("\n" + "=" * 50)
 print("  RÉSUMÉ DE LA PRÉDICTION")
 print("=" * 50)
-print(f"  Segment client   : Cluster {cluster} — {interpreter_cluster(cluster)}")
-print(f"  Risque de churn  : {'OUI' if churn_pred == 1 else 'NON'} ({churn_proba:.2%})")
-print(f"  Revenu estimé    : {revenu_predit:.2f} £")
+print(f"  Segment client      : Cluster {cluster} — {interpreter_cluster(cluster)}")
+print(f"  Risque de churn     : {'OUI' if churn_pred == 1 else 'NON'} ({churn_proba:.2%})")
+print(f"  Panier moyen estimé : {panier_calcule:.2f} £")
 print("=" * 50)
 print("\n✅ Prédiction terminée avec succès !")

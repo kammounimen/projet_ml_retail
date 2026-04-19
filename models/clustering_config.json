@@ -1,0 +1,17 @@
+{
+  "methode": "mediane_rfm",
+  "rfm_weights": {
+    "Frequency": 0.3,
+    "MonetaryTotal": 0.3,
+    "CustomerTenureDays": 0.2,
+    "AvgDaysBetweenPurchases": -0.1,
+    "TotalTransactions": 0.1
+  },
+  "rfm_median": -0.06423561832800856,
+  "cluster_actif": 1,
+  "cluster_inactif": 0,
+  "description": {
+    "0": "Clients Inactifs / \u00c0 Risque (score RFM < m\u00e9diane)",
+    "1": "Clients Actifs / Fid\u00e8les (score RFM >= m\u00e9diane)"
+  }
+}

@@ -1,0 +1,28 @@
+# Labels recommandés pour cluster_labels.py
+# Basés sur les VALEURS RÉELLES (données brutes non normalisées)
+
+CLUSTER_LABELS = {
+    0: "Clients Standard / Faible activité",
+    1: "Ultra-VIP (Exceptions)  HAUT RISQUE CHURN",
+    2: "Clients Premium (Réguliers)",
+}
+
+# Statistiques par cluster (valeurs réelles) :
+
+# Cluster 0 :
+#   Frequency moyenne      : 2.1 commandes
+#   MonetaryTotal moyenne  : 627 £
+#   CustomerTenureDays moy : 34 jours
+#   Taux de churn          : 29.4%
+
+# Cluster 1 :
+#   Frequency moyenne      : 105.5 commandes
+#   MonetaryTotal moyenne  : 110482 £
+#   CustomerTenureDays moy : 342 jours
+#   Taux de churn          : 53.8%
+
+# Cluster 2 :
+#   Frequency moyenne      : 8.8 commandes
+#   MonetaryTotal moyenne  : 2986 £
+#   CustomerTenureDays moy : 277 jours
+#   Taux de churn          : 38.3%
